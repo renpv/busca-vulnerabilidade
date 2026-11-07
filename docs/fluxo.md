@@ -6,6 +6,8 @@ Quem faz o quê, em que ordem e como avisar o próximo. Vale para agentes de IA 
 spec → plano → issue (uma por task) → PR (um por task) → main
 ```
 
+O projeto segue o **GitLab Flow**: a `main` é a integração; todo trabalho sai de uma branch curta (`tarefa-<issue>`) e volta por PR; não há branch de ambiente enquanto não houver deploy (ver `CLAUDE.md`).
+
 Cada issue e cada PR tem, no máximo, **um par de etiquetas: um verbo e um ator**. O par diz **quem age agora**. O ator procura o seu par, faz o passo e passa o bastão trocando o par.
 
 ## Atores

@@ -9,7 +9,7 @@ Normalmente a issue é criada por automacao/publicar-tarefa.sh, que preenche tud
 O par verbo + ator é aplicado só quando a task estiver pronta: primeiro o ator, o verbo por último.
 -->
 
-**Rota:** executar → claude-agencia · revisar → claude-renpv · decidir → renpv
+**Rota:** executar → cursor · revisar → claude-renpv · decidir → renpv
 
 **Plano:** `docs/superpowers/plans/AAAA-MM-DD-<plano>.md`, task <N>
 **Spec:** `docs/superpowers/specs/AAAA-MM-DD-<assunto>-design.md`

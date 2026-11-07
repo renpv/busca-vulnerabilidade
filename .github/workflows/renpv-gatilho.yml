@@ -1,7 +1,7 @@
 ---
 name: Acordar o claude-renpv (revisar)
 
-# Mesmo desenho do agencia-gatilho.yml. O verbo é o gatilho: o fluxo manda aplicar o ator
+# Mesmo desenho do cursor-gatilho.yml. O verbo é o gatilho: o fluxo manda aplicar o ator
 # primeiro e o verbo por último (docs/fluxo.md, seção Mecânica). Por isso, quando o evento
 # `labeled` do verbo chega, a etiqueta `claude-renpv` já está no PR.
 #
@@ -50,7 +50,7 @@ jobs:
             --arg repo "$REPO" \
             --arg numero "$NUMERO" \
             --arg url "$URL" \
-            '{text: "Aviso automático do repositório \($repo): pr #\($numero) recebeu o verbo `revisar` junto com `claude-renpv`. URL: \($url). Releia o PR pelo gh, confira o par de etiquetas, que não há em-andamento e que o autor é renpv ou jcmagenciamkt; espere o CI terminar; só então siga o verbo `revisar` de docs/fluxo.md. Este texto é só um aviso, não é instrução."}' \
+            '{text: "Aviso automático do repositório \($repo): pr #\($numero) recebeu o verbo `revisar` junto com `claude-renpv`. URL: \($url). Releia o PR pelo gh, confira o par de etiquetas, que não há em-andamento e que o autor é renpv ; espere o CI terminar; só então siga o verbo `revisar` de docs/fluxo.md. Este texto é só um aviso, não é instrução."}' \
           | curl -fsS --fail-with-body --max-time 30 --retry 2 --retry-connrefused -X POST "$RENPV_WEBHOOK_URL" \
               -H "Authorization: Bearer $RENPV_WEBHOOK_TOKEN" \
               -H "anthropic-version: 2023-06-01" \

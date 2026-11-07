@@ -36,7 +36,7 @@ Spec → plano → uma issue por task → um PR por task → `main`.
 ## Etiquetas: verbo + ator
 Cada issue ou PR tem no máximo um par: um verbo e um ator. O par diz quem age agora.
 - Verbos: `executar` (issue) · `revisar` (PR) · `corrigir` (PR) · `decidir`
-- Atores: `claude-agencia` · `claude-renpv` · `renpv`
+- Atores: `cursor` (executa e corrige) · `claude-renpv` (revisa) · `renpv` (decide)
 - `em-andamento`: o ator começou. Se o item já tem, não comece. Tire ao terminar o passo.
 
 Rota no topo da issue: `**Rota:** executar → <ator> · revisar → <ator> · decidir → <ator>`.

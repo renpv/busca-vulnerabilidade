@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      # Antes da Task 1 não há projeto Python: o job passa sem rodar nada.
+      - name: Verificar
+        run: |
+          if [ ! -f pyproject.toml ]; then echo "Sem pyproject.toml ainda."; exit 0; fi
+          uv sync
+          automacao/verificar.sh

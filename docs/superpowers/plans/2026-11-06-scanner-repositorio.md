@@ -24,7 +24,7 @@
 - Ferramenta ausente ou que falha vira `nao_rodou` com o motivo, nunca derruba o scan.
 - Camadas (import-linter, dependência num sentido só): `cli` → `geradores`, `nucleo`, `adaptadores` → `modelos`. `nucleo` não importa `adaptadores` nem `geradores`.
 - Flags e saídas de cada ferramenta externa mudam entre versões: o implementador confere na versão instalada (`<cli> --version`, `--help`) e fixa essa versão no setup.
-- Commits em português, Conventional Commits, assinados, em branch `tarefa-<N>` (nunca na `main`). `git add` por caminho.
+- Commits em português, Conventional Commits, assinados, em branch `tarefa-<número da issue>` (nunca na `main`). `git add` por caminho.
 
 ## Revisão: pontos que o plano pina com teste
 1. Repositório vazio ou sem nenhum projeto detectável → relatório vazio, código 0 (Task 4, 12).

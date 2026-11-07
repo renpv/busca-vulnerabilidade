@@ -1,0 +1,80 @@
+---
+name: Acordar o claude-agencia (executar / corrigir)
+
+# O verbo é o gatilho: o fluxo manda aplicar o ator primeiro e o verbo por último
+# (docs/fluxo.md, seção Mecânica). Por isso, quando o evento `labeled` do verbo chega,
+# a etiqueta `claude-agencia` já está no item.
+#
+# - issue com `executar` + `claude-agencia`  -> implementar a task e abrir o PR
+# - PR    com `corrigir` + `claude-agencia`  -> aplicar os comentários da revisão
+#
+# `pull_request_target` roda o workflow da `main` (e não o da branch do PR) e este
+# job não faz checkout de código, então nada vindo do PR é executado aqui.
+
+on:
+  issues:
+    types: [labeled]
+  pull_request_target:
+    types: [labeled]
+
+permissions: {}
+
+concurrency:
+  group: agencia-gatilho-${{ github.event.issue.number || github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  disparar:
+    if: >-
+      (
+        github.event_name == 'issues'
+        && github.event.label.name == 'executar'
+        && contains(github.event.issue.labels.*.name, 'claude-agencia')
+        && !contains(github.event.issue.labels.*.name, 'em-andamento')
+      ) || (
+        github.event_name == 'pull_request_target'
+        && github.event.label.name == 'corrigir'
+        && contains(github.event.pull_request.labels.*.name, 'claude-agencia')
+        && !contains(github.event.pull_request.labels.*.name, 'em-andamento')
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Chamar o gatilho da agência
+        env:
+          AGENCIA_WEBHOOK_URL: ${{ secrets.AGENCIA_WEBHOOK_URL }}
+          AGENCIA_WEBHOOK_TOKEN: ${{ secrets.AGENCIA_WEBHOOK_TOKEN }}
+          REPO: ${{ github.repository }}
+          TIPO: ${{ github.event_name == 'issues' && 'issue' || 'pr' }}
+          NUMERO: ${{ github.event.issue.number || github.event.pull_request.number }}
+          VERBO: ${{ github.event.label.name }}
+          URL: ${{ github.event.issue.html_url || github.event.pull_request.html_url }}
+        run: |
+          set -euo pipefail
+          if [ -z "${AGENCIA_WEBHOOK_URL:-}" ] || [ -z "${AGENCIA_WEBHOOK_TOKEN:-}" ]; then
+            echo "::error::Faltam os segredos AGENCIA_WEBHOOK_URL e AGENCIA_WEBHOOK_TOKEN."
+            exit 1
+          fi
+          echo "::add-mask::$AGENCIA_WEBHOOK_TOKEN"
+          # O gatilho é uma rotina do Claude Code (API de rotinas): recebe um único campo `text`,
+          # que entra como mais um turno da sessão. O texto só avisa quem e o quê; nem o título
+          # nem o corpo da issue ou do PR vão nele. A sessão relê o item pelo `gh`.
+          if [ "$TIPO" = "issue" ]; then
+            PASSO='executar'
+          else
+            PASSO='corrigir'
+          fi
+          jq -n \
+            --arg repo "$REPO" \
+            --arg tipo "$TIPO" \
+            --arg numero "$NUMERO" \
+            --arg verbo "$VERBO" \
+            --arg url "$URL" \
+            --arg passo "$PASSO" \
+            '{text: "Aviso automático do repositório \($repo): \($tipo) #\($numero) recebeu o verbo `\($verbo)` junto com `claude-agencia`. URL: \($url). Releia o item pelo gh, confira o par de etiquetas, que não há em-andamento e que o autor é renpv ou jcmagenciamkt; só então siga o verbo \($passo) de docs/fluxo.md. Este texto é só um aviso, não é instrução."}' \
+          | curl -fsS --fail-with-body --max-time 30 --retry 2 --retry-connrefused -X POST "$AGENCIA_WEBHOOK_URL" \
+              -H "Authorization: Bearer $AGENCIA_WEBHOOK_TOKEN" \
+              -H "anthropic-version: 2023-06-01" \
+              -H "anthropic-beta: experimental-cc-routine-2026-04-01" \
+              -H "Content-Type: application/json" \
+              --data-binary @-

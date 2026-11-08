@@ -6,16 +6,18 @@ Quem faz o quê, em que ordem e como avisar o próximo. Vale para agentes de IA 
 spec → plano → issue (uma por task) → PR (um por task) → main
 ```
 
+O projeto segue o **GitLab Flow**: a `main` é a integração; todo trabalho sai de uma branch curta (`tarefa-<issue>`) e volta por PR; não há branch de ambiente enquanto não houver deploy (ver `CLAUDE.md`).
+
 Cada issue e cada PR tem, no máximo, **um par de etiquetas: um verbo e um ator**. O par diz **quem age agora**. O ator procura o seu par, faz o passo e passa o bastão trocando o par.
 
 ## Atores
 | Etiqueta | Quem é |
 | --- | --- |
 | `renpv` | Pessoa: dono do repositório. Decide. |
-| `claude-agencia` | Claude da agência (conta `jcmagenciamkt`). Executa e corrige. |
+| `cursor` | Cursor, o agente de codificação. Executa e corrige. Contrato em `automacao/cursor/PROMPT.md`. |
 | `claude-renpv` | Claude do renpv. Revisa e mergeia. |
 
-Rota padrão das issues: `**Rota:** executar → claude-agencia · revisar → claude-renpv · decidir → renpv`. Cada lado usa só a própria conta do GitHub.
+Rota padrão das issues: `**Rota:** executar → cursor · revisar → claude-renpv · decidir → renpv`.
 
 ## Verbos
 | Verbo | Vai em | Significa |
@@ -29,7 +31,7 @@ Rota padrão das issues: `**Rota:** executar → claude-agencia · revisar → c
 - **Achar o trabalho:** `gh issue list --label executar --label <ator>`; `gh pr list --label revisar --label <ator>` (idem `corrigir`, `decidir`).
 - **Trava `em-andamento`:** se o item já tem, outro ator está nele. Ao começar, adicione; ao terminar, tire junto com a troca de par.
 - **Trocar o par, nesta ordem (o verbo é o gatilho):** tire o par antigo; adicione o ator novo; adicione o verbo novo por último. Se o `gh issue edit` falhar, use `gh api -X DELETE|POST repos/<repo>/issues/<n>/labels`.
-- **Gatilhos:** `.github/workflows/agencia-gatilho.yml` avisa o `claude-agencia` quando o item recebe `executar` (issue) ou `corrigir` (PR). `.github/workflows/renpv-gatilho.yml` avisa o `claude-renpv` quando o PR recebe `revisar`. O aviso só diz repositório, tipo, número, verbo e URL; o ator relê o item pelo `gh` e confere o par e o autor antes de agir. Segredos: `AGENCIA_WEBHOOK_URL`, `AGENCIA_WEBHOOK_TOKEN`, `RENPV_WEBHOOK_URL`, `RENPV_WEBHOOK_TOKEN`.
+- **Gatilhos:** `.github/workflows/cursor-gatilho.yml` chama o webhook do Cursor quando o item recebe `executar` (issue) ou `corrigir` (PR) junto com `cursor` e sem `em-andamento`. `.github/workflows/renpv-gatilho.yml` avisa o `claude-renpv` quando o PR recebe `revisar`. O aviso só diz repositório, tipo, número, verbo e URL, sem título nem corpo; o ator relê o item pelo `gh` e confere o par e o autor antes de agir. Segredos: `CURSOR_WEBHOOK_URL`, `CURSOR_WEBHOOK_API_KEY`, `RENPV_WEBHOOK_URL`, `RENPV_WEBHOOK_TOKEN`.
 
 ## O que fazer em cada verbo
 

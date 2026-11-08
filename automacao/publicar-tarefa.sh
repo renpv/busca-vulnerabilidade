@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Publica a Task N de um plano como issue pronta para o ator da Rota.
 # Uso: automacao/publicar-tarefa.sh docs/superpowers/plans/<plano>.md <N> [ator]
-#   ator: quem executa (padrão: claude-agencia)
+#   ator: quem executa (padrão: cursor)
 # O par é aplicado por último: primeiro o ator, depois o verbo `executar` (o verbo é o gatilho).
 set -euo pipefail
 
 PLANO="$1"
 N="$2"
-ATOR="${3:-claude-agencia}"
+ATOR="${3:-cursor}"
 # A spec vem da linha "**Spec:** `<caminho>`" do cabeçalho do plano.
 SPEC="$(grep -m1 -oE '^\*\*Spec:\*\* `[^`]+`' "$PLANO" | grep -oE '`[^`]+`' | tr -d '`')"
 [ -n "$SPEC" ] || { echo "Plano sem linha **Spec:**" >&2; exit 1; }

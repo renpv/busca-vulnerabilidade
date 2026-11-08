@@ -23,6 +23,12 @@ Scanner de vulnerabilidades de repositório (Python, `uv`). Orquestra Semgrep, G
 
 ## Processo
 Spec → plano → uma issue por task → um PR por task → `main`.
+
+### GitLab Flow
+- A `main` é a branch de integração e está sempre verde. O trabalho sai de uma branch curta a partir da `main` e volta por PR.
+- Este projeto é uma ferramenta de linha de comando, sem deploy: não há branches de ambiente. Se um dia houver (por exemplo, publicação de pacote), elas ficam abaixo da `main` e só recebem por promoção, no sentido `main` → ambiente.
+- Correção urgente entra primeiro na `main` (*upstream first*) e depois desce para os ambientes, se existirem.
+- Releases se marcam com tag na `main`.
 - Branch `tarefa-<issue>` a partir da `origin/main` atual; rebase antes do merge.
 - PR para `main` com `Closes #<n>` e relato: o que fez, testes com resultado, desvios do plano.
 - Commits em português, Conventional Commits, no imperativo.
@@ -30,7 +36,7 @@ Spec → plano → uma issue por task → um PR por task → `main`.
 ## Etiquetas: verbo + ator
 Cada issue ou PR tem no máximo um par: um verbo e um ator. O par diz quem age agora.
 - Verbos: `executar` (issue) · `revisar` (PR) · `corrigir` (PR) · `decidir`
-- Atores: `claude-agencia` · `claude-renpv` · `renpv`
+- Atores: `cursor` (executa e corrige) · `claude-renpv` (revisa) · `renpv` (decide)
 - `em-andamento`: o ator começou. Se o item já tem, não comece. Tire ao terminar o passo.
 
 Rota no topo da issue: `**Rota:** executar → <ator> · revisar → <ator> · decidir → <ator>`.

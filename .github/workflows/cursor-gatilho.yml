@@ -1,0 +1,71 @@
+---
+name: Acordar o Cursor (executar / corrigir)
+
+# O verbo é o gatilho: o fluxo manda aplicar o ator primeiro e o verbo por último
+# (docs/fluxo.md, seção Mecânica). Por isso, quando o evento `labeled` do verbo chega,
+# a etiqueta `cursor` já está no item.
+#
+# - issue com `executar` + `cursor`  -> implementar a task e abrir o PR
+# - PR    com `corrigir` + `cursor`  -> aplicar os comentários da revisão
+#
+# `pull_request_target` roda o workflow da `main` (e não o da branch do PR) e este
+# job não faz checkout de código, então nada vindo do PR é executado aqui.
+
+on:
+  issues:
+    types: [labeled]
+  pull_request_target:
+    types: [labeled]
+
+permissions: {}
+
+concurrency:
+  group: cursor-gatilho-${{ github.event.issue.number || github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  disparar:
+    if: >-
+      (
+        github.event_name == 'issues'
+        && github.event.label.name == 'executar'
+        && contains(github.event.issue.labels.*.name, 'cursor')
+        && !contains(github.event.issue.labels.*.name, 'em-andamento')
+      ) || (
+        github.event_name == 'pull_request_target'
+        && github.event.label.name == 'corrigir'
+        && contains(github.event.pull_request.labels.*.name, 'cursor')
+        && !contains(github.event.pull_request.labels.*.name, 'em-andamento')
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Chamar o webhook do Cursor
+        env:
+          CURSOR_WEBHOOK_URL: ${{ secrets.CURSOR_WEBHOOK_URL }}
+          CURSOR_WEBHOOK_API_KEY: ${{ secrets.CURSOR_WEBHOOK_API_KEY }}
+          REPO: ${{ github.repository }}
+          TIPO: ${{ github.event_name == 'issues' && 'issue' || 'pr' }}
+          NUMERO: ${{ github.event.issue.number || github.event.pull_request.number }}
+          VERBO: ${{ github.event.label.name }}
+          URL: ${{ github.event.issue.html_url || github.event.pull_request.html_url }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CURSOR_WEBHOOK_URL:-}" ] || [ -z "${CURSOR_WEBHOOK_API_KEY:-}" ]; then
+            echo "::error::Faltam os segredos CURSOR_WEBHOOK_URL e CURSOR_WEBHOOK_API_KEY."
+            exit 1
+          fi
+          echo "::add-mask::$CURSOR_WEBHOOK_API_KEY"
+          # O aviso diz só quem e o quê; nem o título nem o corpo vão nele.
+          # O Cursor relê o item pelo `gh`.
+          jq -n \
+            --arg repo "$REPO" \
+            --arg tipo "$TIPO" \
+            --argjson numero "$NUMERO" \
+            --arg verbo "$VERBO" \
+            --arg url "$URL" \
+            '{repo:$repo, tipo:$tipo, numero:$numero, verbo:$verbo, url:$url}' \
+          | curl -fsS --fail-with-body --max-time 30 --retry 2 --retry-connrefused -X POST "$CURSOR_WEBHOOK_URL" \
+              -H "Authorization: Bearer $CURSOR_WEBHOOK_API_KEY" \
+              -H "Content-Type: application/json" \
+              --data-binary @-
